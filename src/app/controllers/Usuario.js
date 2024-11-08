@@ -32,10 +32,11 @@ export default {
     try {
       const { email, senha } = request.body;
       const usuario = await prisma.$queryRaw`
-      SELECT * FROM login_usuario(${email},${senha})
+      SELECT id, admin, erro FROM login_usuario(${email},${senha})
     `;
-      if (!usuario.length) {
-        return response.status(400).json({ error: "Usuário não encontrado!" });
+      // Verificar se há mensagem de erro
+      if (usuario[0].erro) {
+        return response.status(400).json({ error: usuario[0].erro });
       }
       // Gerar token JWT
       const token = gerarToken(usuario[0].id, usuario[0].admin);
@@ -50,7 +51,7 @@ export default {
   async ListarUsuarios(request, response) {
     try {
       const usuariosComReservas = await prisma.$queryRaw`
-      SELECT listar_usuarios_com_reservas()
+      SELECT * FROM listar_usuarios_com_reservas()
     `;
       return response.status(200).json(usuariosComReservas);
     } catch (error) {
